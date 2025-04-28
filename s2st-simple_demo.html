@@ -251,6 +251,13 @@ startBtn.addEventListener('click', () => {
     }
   };
 
+  recognition.onerror = (event) => {
+    console.error('Recognition error:', event.error);
+    alert('Error: ' + event.error);
+  };
+});
+
+
 
 /**
  * Event handler for Stop button
