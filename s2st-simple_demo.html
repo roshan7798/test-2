@@ -250,28 +250,29 @@ startBtn.addEventListener('click', () => {
   //       speak(translated, outputLangSelect.value);
   //   }
   // };
-let lastTranscript = ''; // Store the last spoken text
+
+let lastFinalTranscript = ''; // Only store final transcripts
 
 recognition.onresult = async (event) => {
-  let transcript = '';
+  let finalTranscript = '';
 
-  // Collect all final transcripts
+  // Loop through results
   for (let i = event.resultIndex; i < event.results.length; ++i) {
     if (event.results[i].isFinal) {
-      transcript += event.results[i][0].transcript;
+      finalTranscript += event.results[i][0].transcript;
     }
   }
 
-  // Only process if the new transcript is different from the last one
-  if (transcript && transcript !== lastTranscript) {
-    lastTranscript = transcript; // Update the last transcript
+  // Process only new final transcript
+  if (finalTranscript && finalTranscript !== lastFinalTranscript) {
+    lastFinalTranscript = finalTranscript; // Update last final transcript
 
-    liveSpeechDiv.textContent += transcript + ' ';
+    liveSpeechDiv.textContent += finalTranscript + ' ';
 
-    const inputLangShort = recognition.lang.split('-')[0]; // Extract input language code
-    const outputLangShort = outputLangSelect.value.split('-')[0]; // Extract output language code
+    const inputLangShort = recognition.lang.split('-')[0];
+    const outputLangShort = outputLangSelect.value.split('-')[0];
 
-    const translated = await translateText(transcript, inputLangShort, outputLangShort);
+    const translated = await translateText(finalTranscript, inputLangShort, outputLangShort);
     translationDiv.textContent += translated + ' ';
     latestTranslation = translated;
 
