@@ -227,27 +227,50 @@ startBtn.addEventListener('click', () => {
   statusDiv.textContent = "Status: Recording...";
   
   
-  recognition.onresult = async (event) => {
-    let transcript = '';
-    // Combine all results
-    for (let i = event.resultIndex; i < event.results.length; ++i) {
-        transcript += event.results[i][0].transcript;
-    }
+  // recognition.onresult = async (event) => {
+  //   let transcript = '';
+  //   // Combine all results
+  //   for (let i = event.resultIndex; i < event.results.length; ++i) {
+  //       transcript += event.results[i][0].transcript;
+  //   }
 
     
-    if (event.results[event.resultIndex].isFinal) {
-        liveSpeechDiv.textContent += transcript + ' ';
+  //   if (event.results[event.resultIndex].isFinal) {
+  //       liveSpeechDiv.textContent += transcript + ' ';
         
-        const inputLangShort = recognition.lang.split('-')[0]; // Get language code (e.g., "en")
-        const outputLangShort = outputLangSelect.value.split('-')[0];
+  //       const inputLangShort = recognition.lang.split('-')[0]; // Get language code (e.g., "en")
+  //       const outputLangShort = outputLangSelect.value.split('-')[0];
 
-        // Translate the text
-        const translated = await translateText(transcript, inputLangShort, outputLangShort);
-        translationDiv.textContent += translated + ' ';
-        latestTranslation = translated;
+  //       // Translate the text
+  //       const translated = await translateText(transcript, inputLangShort, outputLangShort);
+  //       translationDiv.textContent += translated + ' ';
+  //       latestTranslation = translated;
 
-        // Speak the translation
-        speak(translated, outputLangSelect.value);
+  //       // Speak the translation
+  //       speak(translated, outputLangSelect.value);
+  //   }
+  // };
+  recognition.onresult = async (event) => {
+    let transcript = '';
+    
+    // Combine all results
+    for (let i = event.resultIndex; i < event.results.length; ++i) {
+      if (event.results[i].isFinal) {
+        transcript += event.results[i][0].transcript;
+      }
+    }
+  
+    if (transcript) {
+      liveSpeechDiv.textContent += transcript + ' ';
+  
+      const inputLangShort = recognition.lang.split('-')[0]; 
+      const outputLangShort = outputLangSelect.value.split('-')[0];
+  
+      const translated = await translateText(transcript, inputLangShort, outputLangShort);
+      translationDiv.textContent += translated + ' ';
+      latestTranslation = translated;
+  
+      speak(translated, outputLangSelect.value);
     }
   };
 
