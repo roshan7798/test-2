@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Basic HTML setup -->
+  <meta charset="UTF-8">
+  <title>Speech to Speech Translator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+  <style>
+    /* CSS variables for easy theming */
+    :root {
+      --primary: #0d6efd;
+      --danger: #dc3545;
+      --bg: #f5f7fa;
+      --text: #333;
+      --card-bg: #eef2f7;
+    }
+
+    /* Placeholder style for waiting messages */
+    .placeholder {
+      color: #888; /* Light grey color for placeholders */
+      font-style: italic; /* Optional: Make it italic */
+    }
+
+    /* Basic body styling */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 20px;  /* Reduced padding */
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    /* Container for centering content */
+    .container {
+      max-width: 700px;  /* Reduced width */
+      margin: auto;
+    }
+
+    /* Header styling */
+    h1 {
+      font-size: 28px;  /* Reduced font size */
+      margin-bottom: 15px;  /* Reduced margin */
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Form element styling */
+    label {
+      font-weight: 600;
+      margin-top: 8px;  /* Reduced margin */
+      display: block;
+    }
+
+    select, button {
+      padding: 8px;  /* Reduced padding */
+      font-size: 14px;  /* Reduced font size */
+      width: 100%;
+      margin: 8px 0;  /* Reduced margin */
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
+
+    /* Button styling */
+    button {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background-color: #084298;
+    }
+
+    /* Stop button specific styling */
+    .stop-btn {
+      background-color: var(--danger);
+    }
+
+    .stop-btn:hover {
+      background-color: #a71d2a;
+    }
+
+    /* Translation box styling */
+    .translation-box {
+      background: var(--card-bg);
+      padding: 12px;  /* Reduced padding */
+      border-radius: 8px;
+      margin-top: 12px;  /* Reduced margin */
+      min-height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;  /* Reduced font size */
+    }
+
+    /* Button group layout */
+    .button-group {
+      display: flex;
+      gap: 8px;  /* Reduced gap */
+      margin-top: 8px;  /* Reduced margin */
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Main header with icon -->
+  <h1><i class="fas fa-language"></i> Speech to Speech Translator</h1>
+
+  <!-- Language selection inputs -->
+  <label for="inputLang">Input Language:</label>
+  <select id="inputLang">
+    <!-- Manually added languages -->
+    <option value="en-US">English (US)</option>
+    <option value="fa-IR">فارسی (Persian)</option>
+    <option value="ar-SA">العربية (Arabic)</option>
+  </select>
+
+  <label for="outputLang">Output Language:</label>
+  <select id="outputLang">
+    <!-- Manually added languages -->
+    <option value="en-US">English (US)</option>
+    <option value="fa-IR">فارسی (Persian)</option>
+    <option value="ar-SA">العربية (Arabic)</option>
+  </select>
+
+  <!-- Action buttons -->
+  <div class="button-group">
+    <button id="startBtn"><i class="fas fa-microphone"></i> Start Speaking</button>
+    <button id="stopBtn" class="stop-btn"><i class="fas fa-stop"></i> Stop</button>
+  </div>
+
+  <!-- Status Display -->
+  <div id="status" style="margin-top: 10px; font-weight: bold; color: var(--primary);">Status: Idle</div>
+
+
+  <!-- Live speech display -->
+  <h2>Live Speech:</h2>
+  <div id="liveSpeech" class="translation-box"></div>
+
+  <!-- Translation display -->
+  <h2>Translation:</h2>
+  <div id="translation" class="translation-box"></div>
+</div>
+
+<script>
+// DOM element references
+const statusDiv = document.getElementById('status');
+const inputLangSelect = document.getElementById('inputLang');
+const outputLangSelect = document.getElementById('outputLang');
+const startBtn = document.getElementById('startBtn');
+const stopBtn = document.getElementById('stopBtn');
+const liveSpeechDiv = document.getElementById('liveSpeech');
+const translationDiv = document.getElementById('translation');
+
+let recognition; // Speech recognition object
+let latestTranslation = ''; // Stores the latest translation
+let allSpeechText = ''; // Stores all spoken text
+
+/**
+ * Loads available speech synthesis voices into the language dropdowns
+ */
+function loadLanguages() {
+  const synth = window.speechSynthesis;
+  const voices = synth.getVoices();
+
+  if (!voices.length) {
+    synth.addEventListener('voiceschanged', loadLanguages);
+    return;
+  }
+
+  voices.forEach(voice => {
+    if (!voice.lang) return;
+
+    // Create option for input language dropdown
+    const inputOption = document.createElement('option');
+    inputOption.value = voice.lang;
+    inputOption.textContent = `${voice.name} (${voice.lang})`;
+    inputLangSelect.appendChild(inputOption);
+
+    // Create option for output language dropdown
+    const outputOption = document.createElement('option');
+    outputOption.value = voice.lang;
+    outputOption.textContent = `${voice.name} (${voice.lang})`;
+    outputLangSelect.appendChild(outputOption);
+  });
+
+  // Set selected languages from localStorage if available
+  inputLangSelect.value = localStorage.getItem('inputLanguage') || 'en-US';
+  outputLangSelect.value = localStorage.getItem('outputLanguage') || 'fa-IR';
+
+  // Save user-selected language to localStorage
+  inputLangSelect.addEventListener('change', () => {
+    localStorage.setItem('inputLanguage', inputLangSelect.value);
+  });
+  outputLangSelect.addEventListener('change', () => {
+    localStorage.setItem('outputLanguage', outputLangSelect.value);
+  });
+}
+
+// Initial load of languages
+loadLanguages();
+
+/**
+ * Event handler for Start Speaking button
+ */
+
+startBtn.addEventListener('click', () => {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    alert('Speech Recognition is not supported in your browser.');
+    return;
+  }
+
+  recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  recognition.lang = inputLangSelect.value;
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.start();
+
+  // Set status to Recording
+  statusDiv.textContent = "Status: Recording...";
+  
+  
+  recognition.onresult = async (event) => {
+    let transcript = '';
+    // Combine all results
+    for (let i = event.resultIndex; i < event.results.length; ++i) {
+        transcript += event.results[i][0].transcript;
+    }
+
+    
+    if (event.results[event.resultIndex].isFinal) {
+        liveSpeechDiv.textContent += transcript + ' ';
+        
+        const inputLangShort = recognition.lang.split('-')[0]; // Get language code (e.g., "en")
+        const outputLangShort = outputLangSelect.value.split('-')[0];
+
+        // Translate the text
+        const translated = await translateText(transcript, inputLangShort, outputLangShort);
+        translationDiv.textContent += translated + ' ';
+        latestTranslation = translated;
+
+        // Speak the translation
+        speak(translated, outputLangSelect.value);
+    }
+  };
+
+  recognition.onerror = (event) => {
+    console.error('Recognition error:', event.error);
+    alert('Error: ' + event.error);
+  };
+});
+
+
+
+/**
+ * Event handler for Stop button
+ */
+
+stopBtn.addEventListener('click', () => {
+  if (recognition) {
+    recognition.stop();
+    // Set status to Stopped
+    statusDiv.textContent = "Status: Stopped";
+  }
+});
+
+
+/**
+ * Translates text using Google Translate API
+ * @param {string} text - Text to translate
+ * @param {string} fromLang - Source language code
+ * @param {string} toLang - Target language code
+ * @returns {Promise<string>} Translated text
+ */
+async function translateText(text, fromLang, toLang) {
+  try {
+    const res = await fetch(
+      `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${fromLang}&tl=${toLang}&dt=t&q=${encodeURIComponent(text)}`
+    );
+    const data = await res.json();
+    return data[0][0][0];
+  } catch (e) {
+    console.error('Translation error:', e);
+    return text;
+  }
+}
+
+/**
+ * Converts text to speech using Web Speech API
+ * @param {string} text - Text to speak
+ * @param {string} lang - Language code for speech synthesis
+ */
+function speak(text, lang) {
+  const synth = window.speechSynthesis;
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = lang;
+
+  const voices = synth.getVoices();
+  const voice = voices.find(v => v.lang === lang);
+  if (voice) utterance.voice = voice;
+
+  synth.speak(utterance);
+}
+
+</script>
+
+</body>
+</html>
