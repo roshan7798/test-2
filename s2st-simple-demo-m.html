@@ -377,7 +377,8 @@ startBtn.addEventListener('click', () => {
     console.error('Recognition error:', event.error);
     alert('Error: ' + event.error);
   };
-
+  
+  recognition.start();
   // recognition.onend = () => {
   //   if (statusDiv.textContent == "Status: Recording...") {
   //     recognition.start(); // شبیه‌سازی پیوستگی برای موبایل
