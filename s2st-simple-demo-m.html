@@ -299,6 +299,7 @@ loadLanguages();
 /**
  * Event handler for Start Speaking button
  */
+
 startBtn.addEventListener('click', () => {
   if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
     alert('Speech Recognition is not supported in your browser.');
@@ -306,16 +307,24 @@ startBtn.addEventListener('click', () => {
   }
 
   recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+
+  // Cross-platform settings
   recognition.lang = inputLangSelect.value;
+  // recognition.continuous = !isMobile; // Better for desktop
+  // recognition.interimResults = !isMobile; // Disable for mobile
+  // recognition.lang = inputLangSelect.value;
   recognition.continuous = true;
   recognition.interimResults = true;
   recognition.start();
-  statusDiv.textContent = "Status: Recording...";
 
+  // Set status to Recording
+  statusDiv.textContent = "Status: Recording...";
+  
+  
   recognition.onresult = async (event) => {
     let finalTranscript = '';
     let interimTranscript = '';
-
+  
     for (let i = event.resultIndex; i < event.results.length; ++i) {
       const transcript = event.results[i][0].transcript;
       if (event.results[i].isFinal) {
@@ -324,27 +333,32 @@ startBtn.addEventListener('click', () => {
         interimTranscript += transcript;
       }
     }
-
     const inputDir = getTextDirection(recognition.lang);
     interimSpeech.className = `placeholder ${inputDir}-text`;
+    // Show interim (live) speech in light color
     document.getElementById('interimSpeech').textContent = interimTranscript;
-
-    if (finalTranscript.trim() !== '' && finalTranscript !== allSpeechText) {
-      allSpeechText = finalTranscript;
+  
+    if (finalTranscript.trim() !== '') {
+      // Clear interim when final arrives
       document.getElementById('interimSpeech').textContent = '';
+  
+      // Set direction
+      const inputDir = getTextDirection(recognition.lang);
       liveSpeechDiv.className = `translation-box ${inputDir}-text`;
+  
+      // Append final result
       liveSpeechDiv.textContent += finalTranscript + ' \n ';
       liveSpeechDiv.scrollTop = liveSpeechDiv.scrollHeight;
-
+  
       const inputLangShort = recognition.lang.split('-')[0];
       const outputLangShort = outputLangSelect.value.split('-')[0];
-
+  
       const translated = await translateText(finalTranscript, inputLangShort, outputLangShort);
       const outputDir = getTextDirection(outputLangSelect.value);
       translationDiv.className = `translation-box ${outputDir}-text`;
       translationDiv.textContent += translated + ' \n ';
       translationDiv.scrollTop = translationDiv.scrollHeight;
-
+  
       latestTranslation = translated;
       speak(translated, outputLangSelect.value);
     }
@@ -354,13 +368,8 @@ startBtn.addEventListener('click', () => {
     console.error('Recognition error:', event.error);
     alert('Error: ' + event.error);
   };
-
-  recognition.onend = () => {
-    if (isMobile) {
-      recognition.start(); // Auto-restart for mobile streaming
-    }
-  };
 });
+
 
 
 /**
