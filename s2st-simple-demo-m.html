@@ -311,7 +311,7 @@ startBtn.addEventListener('click', () => {
 
   // Cross-platform settings
   recognition.lang = inputLangSelect.value;
-  // recognition.continuous = !isMobile; // Better for desktop
+  recognition.continuous = !isMobile; // Better for desktop
   // recognition.interimResults = !isMobile; // Disable for mobile
   // recognition.lang = inputLangSelect.value;
   recognition.continuous = true;
@@ -321,19 +321,18 @@ startBtn.addEventListener('click', () => {
 
   // Set status to Recording
   statusDiv.textContent = "Status: Recording...";
+
   
   let lastFinalTranscript = '';
   
   recognition.onresult = async (event) => {
     let finalTranscript = '';
     let interimTranscript = '';
-    let interimTranscriptM = '';
   
     for (let i = event.resultIndex; i < event.results.length; ++i) {
       const transcript = event.results[i][0].transcript;
       if (event.results[i].isFinal) {
         finalTranscript += transcript;
-        interimTranscriptM = transcript
       } else {
         interimTranscript += transcript;
       }
@@ -343,9 +342,6 @@ startBtn.addEventListener('click', () => {
     // Show interim (live) speech in light color
     document.getElementById('interimSpeech').textContent = interimTranscript;
 
-    // if(isMobile){
-    //   document.getElementById('interimSpeech').textContent = interimTranscriptM;
-    // }
   
     if (finalTranscript.trim() !== '' && finalTranscript.trim() !== lastFinalTranscript.trim()) {
       lastFinalTranscript = finalTranscript.trim(); // update last transcript
@@ -372,20 +368,14 @@ startBtn.addEventListener('click', () => {
       speak(translated, outputLangSelect.value);
     }
   };
-
+  if (statusDiv.textContent == "Status: Recording..."){
+    recognition.start();
+  }
   recognition.onerror = (event) => {
     console.error('Recognition error:', event.error);
     alert('Error: ' + event.error);
   };
-  
-  recognition.start();
-  // recognition.onend = () => {
-  //   if (statusDiv.textContent == "Status: Recording...") {
-  //     recognition.start(); // شبیه‌سازی پیوستگی برای موبایل
-  //   } else {
-  //     statusDiv.textContent = "Status: Stopped";
-  //   }
-  // };
+
 });
 
 
