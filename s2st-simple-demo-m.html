@@ -343,9 +343,9 @@ startBtn.addEventListener('click', () => {
     // Show interim (live) speech in light color
     document.getElementById('interimSpeech').textContent = interimTranscript;
 
-    if(isMobile){
-      document.getElementById('interimSpeech').textContent = interimTranscriptM;
-    }
+    // if(isMobile){
+    //   document.getElementById('interimSpeech').textContent = interimTranscriptM;
+    // }
   
     if (finalTranscript.trim() !== '' && finalTranscript.trim() !== lastFinalTranscript.trim()) {
       lastFinalTranscript = finalTranscript.trim(); // update last transcript
