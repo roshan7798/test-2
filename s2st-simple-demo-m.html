@@ -368,14 +368,18 @@ startBtn.addEventListener('click', () => {
       speak(translated, outputLangSelect.value);
     }
   };
-  if (statusDiv.textContent == "Status: Recording..."){
-    recognition.start();
-  }
+  // if (statusDiv.textContent == "Status: Recording..."){
+  //   recognition.start();
+  // }
   recognition.onerror = (event) => {
     console.error('Recognition error:', event.error);
     alert('Error: ' + event.error);
   };
-
+  recognition.onend = () => {
+    if (isMobile && statusDiv.textContent == "Status: Recording...") {
+      recognition.start();
+    }
+  };
 });
 
 
