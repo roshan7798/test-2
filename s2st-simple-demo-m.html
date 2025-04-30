@@ -301,32 +301,32 @@ loadLanguages();
  * Event handler for Start Speaking button
  */
 
+let lastFinalTranscript = '';
+let keepRecognizing = false;
+const interimSpeech = document.getElementById('interimSpeech');
+
 startBtn.addEventListener('click', () => {
   if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
     alert('Speech Recognition is not supported in your browser.');
     return;
   }
 
+  if (recognition) recognition.stop(); // در صورت شروع مجدد، مورد قبلی رو قطع کن
+
   recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-
-  // Cross-platform settings
   recognition.lang = inputLangSelect.value;
-  // recognition.continuous = !isMobile; // Better for desktop
-  // recognition.interimResults = !isMobile; // Disable for mobile
-  // recognition.lang = inputLangSelect.value;
-  recognition.continuous = true;
-  recognition.interimResults = true;
-  recognition.start();
 
-  // Set status to Recording
+  recognition.continuous = !isMobile; // فقط در دسکتاپ
+  recognition.interimResults = true;
+  keepRecognizing = true;
+
+  recognition.start();
   statusDiv.textContent = "Status: Recording...";
-  
-  let lastFinalTranscript = '';
-  
+
   recognition.onresult = async (event) => {
     let finalTranscript = '';
     let interimTranscript = '';
-  
+
     for (let i = event.resultIndex; i < event.results.length; ++i) {
       const transcript = event.results[i][0].transcript;
       if (event.results[i].isFinal) {
@@ -335,32 +335,27 @@ startBtn.addEventListener('click', () => {
         interimTranscript += transcript;
       }
     }
+
     const inputDir = getTextDirection(recognition.lang);
-    interimSpeech.className = `placeholder ${inputDir}-text`;
-    // Show interim (live) speech in light color
-    document.getElementById('interimSpeech').textContent = interimTranscript;
-  
+    interimSpeech.className = `translation-box ${inputDir}-text`;
+    interimSpeech.textContent = interimTranscript;
+
     if (finalTranscript.trim() !== '' && finalTranscript.trim() !== lastFinalTranscript.trim()) {
-      lastFinalTranscript = finalTranscript.trim(); // update last transcript
-  
-  
-      // Set direction
-      const inputDir = getTextDirection(recognition.lang);
+      lastFinalTranscript = finalTranscript.trim();
+
       liveSpeechDiv.className = `translation-box ${inputDir}-text`;
-  
-      // Append final result
       liveSpeechDiv.textContent += finalTranscript + ' \n ';
       liveSpeechDiv.scrollTop = liveSpeechDiv.scrollHeight;
-  
+
       const inputLangShort = recognition.lang.split('-')[0];
       const outputLangShort = outputLangSelect.value.split('-')[0];
-  
+
       const translated = await translateText(finalTranscript, inputLangShort, outputLangShort);
       const outputDir = getTextDirection(outputLangSelect.value);
       translationDiv.className = `translation-box ${outputDir}-text`;
       translationDiv.textContent += translated + ' \n ';
       translationDiv.scrollTop = translationDiv.scrollHeight;
-  
+
       latestTranslation = translated;
       speak(translated, outputLangSelect.value);
     }
@@ -368,23 +363,25 @@ startBtn.addEventListener('click', () => {
 
   recognition.onerror = (event) => {
     console.error('Recognition error:', event.error);
-    alert('Error: ' + event.error);
+  };
+
+  recognition.onend = () => {
+    if (keepRecognizing) {
+      recognition.start(); // شبیه‌سازی پیوستگی برای موبایل
+    } else {
+      statusDiv.textContent = "Status: Stopped";
+    }
   };
 });
 
-
-
-/**
- * Event handler for Stop button
- */
-
 stopBtn.addEventListener('click', () => {
+  keepRecognizing = false;
   if (recognition) {
     recognition.stop();
-    // Set status to Stopped
     statusDiv.textContent = "Status: Stopped";
   }
 });
+
 
 
 /**
