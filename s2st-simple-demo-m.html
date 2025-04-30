@@ -212,6 +212,7 @@
 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 const isChrome = /Chrome/i.test(navigator.userAgent);
 // DOM element references
+const interimSpeech = document.getElementById('interimSpeech');
 const statusDiv = document.getElementById('status');
 const inputLangSelect = document.getElementById('inputLang');
 const outputLangSelect = document.getElementById('outputLang');
@@ -320,6 +321,7 @@ startBtn.addEventListener('click', () => {
   // Set status to Recording
   statusDiv.textContent = "Status: Recording...";
   
+  let lastFinalTranscript = '';
   
   recognition.onresult = async (event) => {
     let finalTranscript = '';
@@ -338,9 +340,9 @@ startBtn.addEventListener('click', () => {
     // Show interim (live) speech in light color
     document.getElementById('interimSpeech').textContent = interimTranscript;
   
-    if (finalTranscript.trim() !== '') {
-      // Clear interim when final arrives
-      document.getElementById('interimSpeech').textContent = '';
+    if (finalTranscript.trim() !== '' && finalTranscript.trim() !== lastFinalTranscript.trim()) {
+      lastFinalTranscript = finalTranscript.trim(); // update last transcript
+  
   
       // Set direction
       const inputDir = getTextDirection(recognition.lang);
