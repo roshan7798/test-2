@@ -334,7 +334,7 @@ startBtn.addEventListener('click', () => {
       }
     }
     const inputDir = getTextDirection(recognition.lang);
-    interimSpeech.className = `translation-box ${inputDir}-text`;
+    interimSpeech.className = `placeholder ${inputDir}-text`;
     // Show interim (live) speech in light color
     document.getElementById('interimSpeech').textContent = interimTranscript;
   
