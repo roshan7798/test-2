@@ -327,11 +327,13 @@ startBtn.addEventListener('click', () => {
   recognition.onresult = async (event) => {
     let finalTranscript = '';
     let interimTranscript = '';
+    let interimTranscriptM = '';
   
     for (let i = event.resultIndex; i < event.results.length; ++i) {
       const transcript = event.results[i][0].transcript;
       if (event.results[i].isFinal) {
         finalTranscript += transcript;
+        interimTranscriptM = transcript
       } else {
         interimTranscript += transcript;
       }
@@ -342,7 +344,7 @@ startBtn.addEventListener('click', () => {
     document.getElementById('interimSpeech').textContent = interimTranscript;
 
     if(isMobile){
-      document.getElementById('interimSpeech').textContent = finalTranscript;
+      document.getElementById('interimSpeech').textContent = interimTranscriptM;
     }
   
     if (finalTranscript.trim() !== '' && finalTranscript.trim() !== lastFinalTranscript.trim()) {
