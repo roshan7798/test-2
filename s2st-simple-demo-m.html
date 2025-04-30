@@ -311,10 +311,10 @@ startBtn.addEventListener('click', () => {
 
   // Cross-platform settings
   recognition.lang = inputLangSelect.value;
-  recognition.continuous = !isMobile; // Better for desktop
+  // recognition.continuous = !isMobile; // Better for desktop
   // recognition.interimResults = !isMobile; // Disable for mobile
   // recognition.lang = inputLangSelect.value;
-  // recognition.continuous = true;
+  recognition.continuous = true;
   recognition.interimResults = true;
   keepRecognizing = true;
   recognition.start();
