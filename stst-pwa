@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Basic HTML setup -->
+  <meta charset="UTF-8">
+  <title>Speech to Speech Translator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+  <style>
+    /* CSS variables for easy theming */
+    :root {
+      --primary: #0d6efd;
+      --danger: #dc3545;
+      --bg: #f5f7fa;
+      --text: #333;
+      --card-bg: #eef2f7;
+    }
+
+    /* Placeholder style for waiting messages */
+    .placeholder {
+      color: #888; /* Light grey color for placeholders */
+      font-style: italic; /* Optional: Make it italic */
+    }
+
+    /* Basic body styling */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 20px;  /* Reduced padding */
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    /* Container for centering content */
+    .container {
+      max-width: 700px;  /* Reduced width */
+      margin: auto;
+    }
+
+    /* Header styling */
+    h1 {
+      font-size: 28px;  /* Reduced font size */
+      margin-bottom: 15px;  /* Reduced margin */
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Form element styling */
+    label {
+      font-weight: 600;
+      margin-top: 8px;  /* Reduced margin */
+      display: block;
+    }
+
+    select, button {
+      padding: 8px;  /* Reduced padding */
+      font-size: 14px;  /* Reduced font size */
+      width: 100%;
+      margin: 8px 0;  /* Reduced margin */
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
+
+    /* Button styling */
+    button {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background-color: #084298;
+    }
+
+    /* Stop button specific styling */
+    .stop-btn {
+      background-color: var(--danger);
+    }
+
+    .stop-btn:hover {
+      background-color: #a71d2a;
+    }
+
+    // /* Translation box styling */
+    // .translation-box {
+    //   background: var(--card-bg);
+    //   padding: 12px;  /* Reduced padding */
+    //   border-radius: 8px;
+    //   margin-top: 12px;  /* Reduced margin */
+    //   min-height: 100px;
+    //   display: flex;
+    //   align-items: center;
+    //   justify-content: center;
+    //   font-size: 16px;  /* Reduced font size */
+    //   white-space: pre-line;
+    //   line-height: 1.5;
+    // }
+
+    /* Translation box styling with scroll */
+    .translation-box {
+      max-height: 70px; /* Fixed height */
+      min-height: 70px;
+      overflow-y: auto;  /* Vertical scroll */
+      white-space: pre-wrap; /* Preserve line breaks */
+      word-wrap: break-word; /* Break long words */
+      padding: 16px;
+      border-radius: 8px;
+      margin-top: 12px;
+      background: var(--card-bg);
+    }
+
+    /* Custom scrollbar styling */
+    .translation-box::-webkit-scrollbar {
+      width: 8px;
+    }
+    .translation-box::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+    .translation-box::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 4px;
+    }
+    .translation-box::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+    /* Translation box styling with scroll */
+    .box {
+      min-height: 20px;
+    }
+    /* Button group layout */
+    .button-group {
+      display: flex;
+      gap: 8px;  /* Reduced gap */
+      margin-top: 8px;  /* Reduced margin */
+    }
+    /* Text direction classes */
+    .rtl-text {
+      direction: rtl;
+      text-align: right;
+    }
+
+    .ltr-text {
+      direction: ltr;
+      text-align: left;
+    }
+
+        /* Add this to your existing styles */
+    #interimSpeech {
+      background-color: #f0f8ff; /* Light blue background for distinction */
+      min-height: 10px; /* Slightly smaller than other boxes */
+      border-left: 3px solid var(--primary); /* Accent border */
+      padding:5px
+    }
+
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Main header with icon -->
+  <h1>Speech to Speech Translator</h1>
+
+  <!-- Language selection inputs -->
+  <label for="inputLang">Input Language:</label>
+  <select id="inputLang">
+    <!-- Manually added languages -->
+    <option value="en-US">English (US)</option>
+    <option value="fa-IR">فارسی (Persian)</option>
+    <option value="ar-SA">العربية (Arabic)</option>
+  </select>
+
+  <label for="outputLang">Output Language:</label>
+  <select id="outputLang">
+    <!-- Manually added languages -->
+    <option value="en-US">English (US)</option>
+    <option value="fa-IR">فارسی (Persian)</option>
+    <option value="ar-SA">العربية (Arabic)</option>
+  </select>
+
+  <!-- Action buttons -->
+  <div class="button-group">
+    <button id="startBtn"><i class="fas fa-microphone"></i> Start Speaking</button>
+    <button id="stopBtn" class="stop-btn"><i class="fas fa-stop"></i> Stop</button>
+  </div>
+
+  <!-- Status Display -->
+  <div id="status" style="margin-top: 10px; font-weight: bold; color: var(--primary);">Status: Idle</div>
+
+
+  <!-- Live speech display -->
+  <!-- Add this new section -->
+  
+  <h3>Live Speech:</h3>
+  <div id="interimSpeech" class="translation-box placeholder">Speech input will appear here as you speak</div>
+  <hr>
+  <div id="liveSpeech" class="translation-box"> </div>
+
+  <!-- Translation display -->
+  <h3>Translation:</h3>
+  <div id="translation" class="translation-box"> </div>
+</div>
+
+<script>
+
+// Cross-platform detection
+const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+const isChrome = /Chrome/i.test(navigator.userAgent);
+// DOM element references
+const interimSpeech = document.getElementById('interimSpeech');
+const statusDiv = document.getElementById('status');
+const inputLangSelect = document.getElementById('inputLang');
+const outputLangSelect = document.getElementById('outputLang');
+const startBtn = document.getElementById('startBtn');
+const stopBtn = document.getElementById('stopBtn');
+const liveSpeechDiv = document.getElementById('liveSpeech');
+const translationDiv = document.getElementById('translation');
+
+let recognition; // Speech recognition object
+let latestTranslation = ''; // Stores the latest translation
+let allSpeechText = ''; // Stores all spoken text
+
+/**
+ * Loads available speech synthesis voices into the language dropdowns
+ */
+
+/**
+ * Detects text direction based on language code
+ * @param {string} lang - Language code (e.g. 'fa-IR')
+ * @returns {string} - 'rtl' or 'ltr'
+ */
+function getTextDirection(lang) {
+  const rtlLanguages = ['ar', 'fa', 'ur']; // RTL language codes
+  const langCode = lang.split('-')[0];
+  return rtlLanguages.includes(langCode) ? 'rtl' : 'ltr';
+}
+
+inputLangSelect.addEventListener('change', () => {
+  const direction = getTextDirection(inputLangSelect.value);
+  liveSpeechDiv.className = 'translation-box ' + (direction === 'rtl' ? 'rtl-text' : 'ltr-text');
+});
+
+outputLangSelect.addEventListener('change', () => {
+  const direction = getTextDirection(outputLangSelect.value);
+  translationDiv.className = 'translation-box ' + (direction === 'rtl' ? 'rtl-text' : 'ltr-text');
+});
+
+const initialInputDirection = getTextDirection(inputLangSelect.value);
+liveSpeechDiv.classList.add(initialInputDirection === 'rtl' ? 'rtl-text' : 'ltr-text');
+
+const initialOutputDirection = getTextDirection(outputLangSelect.value);
+translationDiv.classList.add(initialOutputDirection === 'rtl' ? 'rtl-text' : 'ltr-text');
+
+function loadLanguages() {
+  const synth = window.speechSynthesis;
+  const voices = synth.getVoices();
+
+  if (!voices.length) {
+    synth.addEventListener('voiceschanged', loadLanguages);
+    return;
+  }
+
+  voices.forEach(voice => {
+    if (!voice.lang) return;
+
+    // Create option for input language dropdown
+    const inputOption = document.createElement('option');
+    inputOption.value = voice.lang;
+    inputOption.textContent = `${voice.name} (${voice.lang})`;
+    inputLangSelect.appendChild(inputOption);
+
+    // Create option for output language dropdown
+    const outputOption = document.createElement('option');
+    outputOption.value = voice.lang;
+    outputOption.textContent = `${voice.name} (${voice.lang})`;
+    outputLangSelect.appendChild(outputOption);
+  });
+
+  // Set selected languages from localStorage if available
+  inputLangSelect.value = localStorage.getItem('inputLanguage') || 'fa-IR';
+  outputLangSelect.value = localStorage.getItem('outputLanguage') || 'en-US';
+
+  // Save user-selected language to localStorage
+  inputLangSelect.addEventListener('change', () => {
+    localStorage.setItem('inputLanguage', inputLangSelect.value);
+  });
+  outputLangSelect.addEventListener('change', () => {
+    localStorage.setItem('outputLanguage', outputLangSelect.value);
+  });
+}
+
+
+function convertPersianNumbersToEnglish(text) {
+  const persianNumbers = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
+  const englishNumbers = ['0','1','2','3','4','5','6','7','8','9'];
+  return text.replace(/[۰-۹]/g, (char) => englishNumbers[persianNumbers.indexOf(char)]);
+}
+// Initial load of languages
+loadLanguages();
+
+/**
+ * Event handler for Start Speaking button
+ */
+
+startBtn.addEventListener('click', () => {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    alert('Speech Recognition is not supported in your browser.');
+    return;
+  }
+
+  recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+
+  // Cross-platform settings
+  recognition.lang = inputLangSelect.value;
+  recognition.continuous = !isMobile; // Better for desktop
+  // recognition.interimResults = !isMobile; // Disable for mobile
+  // recognition.lang = inputLangSelect.value;
+  // recognition.continuous = true;
+  recognition.interimResults = true;
+  keepRecognizing = true;
+  recognition.start();
+
+  // Set status to Recording
+  statusDiv.textContent = "Status: Recording...";
+
+  
+  let lastFinalTranscript = '';
+  
+  recognition.onresult = async (event) => {
+    let finalTranscript = '';
+    let interimTranscript = '';
+  
+    for (let i = event.resultIndex; i < event.results.length; ++i) {
+      const transcript = event.results[i][0].transcript;
+      if (event.results[i].isFinal) {
+        finalTranscript += transcript;
+      } else {
+        interimTranscript += transcript;
+      }
+    }
+    const inputDir = getTextDirection(recognition.lang);
+    interimSpeech.className = `placeholder ${inputDir}-text`;
+    // Show interim (live) speech in light color
+    document.getElementById('interimSpeech').textContent = interimTranscript;
+
+  
+    if (finalTranscript.trim() !== '' && finalTranscript.trim() !== lastFinalTranscript.trim()) {
+      lastFinalTranscript = finalTranscript.trim(); // update last transcript
+  
+
+  
+      // Set direction
+      const inputDir = getTextDirection(recognition.lang);
+      liveSpeechDiv.className = `translation-box ${inputDir}-text`;
+  
+      // Append final result
+      liveSpeechDiv.textContent += finalTranscript + ' \n ';
+      liveSpeechDiv.scrollTop = liveSpeechDiv.scrollHeight;
+  
+      const inputLangShort = recognition.lang.split('-')[0];
+      const outputLangShort = outputLangSelect.value.split('-')[0];
+
+
+      finalTranscript = convertPersianNumbersToEnglish(finalTranscript);  
+
+      const translated = await translateText(finalTranscript, inputLangShort, outputLangShort);
+      const outputDir = getTextDirection(outputLangSelect.value);
+      translationDiv.className = `translation-box ${outputDir}-text`;
+      translationDiv.textContent += translated + ' \n ';
+      translationDiv.scrollTop = translationDiv.scrollHeight;
+  
+      latestTranslation = translated;
+      speak(translated, outputLangSelect.value);
+    }
+  };
+  // if (statusDiv.textContent == "Status: Recording..."){
+  //   recognition.start();
+  // }
+  recognition.onerror = (event) => {
+    console.error('Recognition error:', event.error);
+    alert('Error: ' + event.error);
+  };
+  recognition.onend = () => {
+    if (statusDiv.textContent == "Status: Recording...") {
+      recognition.start();
+    }
+
+    // if (isMobile && statusDiv.textContent == "Status: Recording...") {
+    //   recognition.start();
+    // }
+  };
+});
+
+
+
+/**
+ * Event handler for Stop button
+ */
+
+stopBtn.addEventListener('click', () => {
+  if (recognition) {
+    recognition.stop();
+    // Set status to Stopped
+    statusDiv.textContent = "Status: Stopped";
+  }
+});
+
+
+/**
+ * Translates text using Google Translate API
+ * @param {string} text - Text to translate
+ * @param {string} fromLang - Source language code
+ * @param {string} toLang - Target language code
+ * @returns {Promise<string>} Translated text
+ */
+async function translateText(text, fromLang, toLang) {
+  try {
+    const res = await fetch(
+      `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${fromLang}&tl=${toLang}&dt=t&q=${encodeURIComponent(text)}`
+    );
+    const data = await res.json();
+    return data[0][0][0];
+  } catch (e) {
+    console.error('Translation error:', e);
+    return text;
+  }
+}
+
+/**
+ * Converts text to speech using Web Speech API
+ * @param {string} text - Text to speak
+ * @param {string} lang - Language code for speech synthesis
+ */
+function speak(text, lang) {
+  const synth = window.speechSynthesis;
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = lang;
+
+  const voices = synth.getVoices();
+  const voice = voices.find(v => v.lang === lang);
+  if (voice) utterance.voice = voice;
+
+  synth.speak(utterance);
+}
+
+</script>
+
+</body>
+</html>
